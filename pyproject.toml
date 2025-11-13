@@ -17,4 +17,4 @@ requires-python = ">=3.10"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["ptn.utils"]
+include = ["ptn_utils"]
