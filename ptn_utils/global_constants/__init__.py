@@ -36,6 +36,7 @@ EMBED_COLOUR_WARNING = 0xFFD700  # and it was all yellow
 ############################
 
 any_moderation_role = [ROLE_COUNCIL, ROLE_MOD]
+any_council_role = [ROLE_COUNCIL, ROLE_ADVISOR]
 any_elevated_role = [
     ROLE_COUNCIL,
     ROLE_MOD,
@@ -88,8 +89,8 @@ role_to_color = {
     ROLE_FO: ROLE_COLOR_FO,
     ROLE_AGENT: ROLE_COLOR_AGENT,
     ROLE_CM: ROLE_COLOR_CM,
-    ROLE_PILLAR: ROLE_PILLAR,
-    ROLE_CCO: ROLE_CCO,
-    ROLE_PATH: ROLE_PATH,
-    ROLE_SPEC: ROLE_SPEC,
+    ROLE_PILLAR: ROLE_COLOR_PILLAR,
+    ROLE_CCO: ROLE_COLOR_CCO,
+    ROLE_PATH: ROLE_COLOR_PATH,
+    ROLE_SPEC: ROLE_COLOR_SPEC,
 }
