@@ -1,0 +1,146 @@
+import logging
+import os
+from enum import Enum
+from sys import stdout
+from typing import List
+
+from discord import Interaction, app_commands
+from discord.app_commands import autocomplete
+from discord.ext import commands
+from loguru import logger
+
+from ptn_utils.global_constants import any_council_role
+from ptn_utils.logger.InterceptHandler import InterceptHandler
+
+LOG_SINKS: dict[str, int] = {}
+
+logger = logger.bind(logger_name="ptnlogger")
+
+
+def create_default_logger_sink(level: str) -> None:
+    if "_default" in LOG_SINKS:
+        logger.remove(LOG_SINKS["_default"])
+
+    def filter_function(record: dict) -> bool:
+        record_logger_name = record["extra"].get("logger_name", []).split(".")
+        for logger_name in LOG_SINKS:
+            if logger_name == "_default":
+                continue
+            logger_name_list = logger_name.split(".")
+            if len(record_logger_name) >= len(logger_name_list):
+                if record_logger_name[: len(logger_name_list)] == logger_name_list:
+                    return False
+        return True
+
+    sink_id = logger.add(
+        stdout,
+        level=level,
+        filter=filter_function,
+    )
+    LOG_SINKS["_default"] = sink_id
+
+
+def create_logger_sink(logger_name: str, level: str) -> None:
+    if logger_name in LOG_SINKS:
+        logger.remove(LOG_SINKS[logger_name])
+
+    def filter_function(record: dict) -> bool:
+        record_logger_name = record["extra"].get("logger_name", []).split(".")
+        logger_name_list = logger_name.split(".")
+        if len(record_logger_name) >= len(logger_name_list):
+            return record_logger_name[: len(logger_name_list)] == logger_name_list
+        return False
+
+    sink_id = logger.add(
+        stdout,
+        level=level,
+        filter=filter_function,
+    )
+    LOG_SINKS[logger_name] = sink_id
+
+
+def setup_logging() -> None:
+    logger.info("Setting up logging configuration.")
+
+    # Send all logging through loguru
+    log_handler = InterceptHandler()
+    logging.root.handlers = [log_handler]
+    logging.root.setLevel(logging.DEBUG)
+
+    # Set default logging level from environment variable or INFO
+    loglevel_input = os.getenv("PTN_LOG_LEVEL", "INFO")
+    logger.remove()
+    create_default_logger_sink(loglevel_input)
+
+    logger.info(f"Logging level set to {loglevel_input}.")
+
+
+class LogLevels(Enum):
+    Critical = "CRITICAL"
+    Error = "ERROR"
+    Warning = "WARNING"
+    Info = "INFO"
+    Debug = "DEBUG"
+
+
+async def set_logging_level_autocomplete(
+    interaction: Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    all_loggers = [logging.getLogger(name).name for name in logging.root.manager.loggerDict]
+    if "." in current.lower():
+        pass  # we've already specified a package. Shouldn't have more than 25 loggers in one package, _right_?
+    else:
+        all_loggers = [x for x in all_loggers if "." not in x]  # yeet subpackages if we haven't selected a package yet
+
+    if len(all_loggers) > 25:
+        """
+        Safety valve in case one or both of the assumptions above fail:
+            - >25 top-level packages or 
+            - >25 loggers for a given top-level package
+        
+        Generate a warning and move on. Log the full list in debug if we care to check it out later
+        """
+
+        logger.warning("Autocomplete returned more options than Discord can handle. Truncating to 25")
+        logger.debug(all_loggers)
+        all_loggers = all_loggers[1:25]
+
+    return [
+        app_commands.Choice(name=logger_name, value=logger_name)
+        for logger_name in all_loggers
+        if current.lower() in logger_name.lower()
+    ]
+
+
+class Logger(commands.Cog):
+    @app_commands.command(name="set_logging_level", description="Set logging level for the bot")
+    @app_commands.checks.has_any_role(*any_council_role)
+    @app_commands.describe(
+        log_level="Logging level to set",
+        logger_name="Which logger to set the level for (default: all, resets any current overrides)",
+    )
+    @autocomplete(logger_name=set_logging_level_autocomplete)
+    async def set_logging_level(
+        self, interaction: Interaction, log_level: LogLevels, logger_name: str | None = None
+    ) -> None:
+        logger.info(f"Setting logging level to {log_level.name} as requested by {interaction.user.name}")
+
+        if logger_name:
+            if logger_name == "_default":
+                await interaction.response.send_message("Cannot set logging level for reserved logger name '_default'.")
+                return
+
+            create_logger_sink(logger_name, log_level.value)
+            logger.info(f"Logging level for {logger_name} set to {log_level.name}")
+            await interaction.response.send_message(f"Logging level for {logger_name} set to {log_level.name}")
+
+        else:
+            create_default_logger_sink(log_level.value)
+            LOG_SINKS.clear()
+            logger.info(f"Logging level set to {log_level.name}")
+            await interaction.response.send_message(f"Logging level set to {log_level.name}")
+
+
+# Setup logging when the module is imported
+setup_logging()
