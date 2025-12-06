@@ -68,7 +68,11 @@ def setup_logging() -> None:
     logging.root.setLevel(logging.DEBUG)
 
     # Set default logging level from environment variable or INFO
-    loglevel_input = os.getenv("PTN_LOG_LEVEL", "INFO")
+    loglevel_input = os.getenv("PTN_LOG_LEVEL")
+    try:
+        LogLevels(loglevel_input)
+    except ValueError:
+        loglevel_input = "INFO"
     logger.remove()
     create_default_logger_sink(loglevel_input)
 
@@ -104,8 +108,7 @@ async def set_logging_level_autocomplete(
 
         logger.warning("Autocomplete returned more options than Discord can handle. Truncating to 25")
         logger.debug(all_loggers)
-        all_loggers = all_loggers[1:25]
-
+    all_loggers = all_loggers[:25]
     return [
         app_commands.Choice(name=logger_name, value=logger_name)
         for logger_name in all_loggers
