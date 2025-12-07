@@ -139,8 +139,11 @@ class Logger(commands.Cog):
             await interaction.response.send_message(f"Logging level for {logger_name} set to {log_level.name}")
 
         else:
+            for logger_name, sink_id in list(LOG_SINKS.items()):
+                if logger_name != "_default":
+                    logger.remove(sink_id)
+                    del LOG_SINKS[logger_name]
             create_default_logger_sink(log_level.value)
-            LOG_SINKS.clear()
             logger.info(f"Logging level set to {log_level.name}")
             await interaction.response.send_message(f"Logging level set to {log_level.name}")
 
