@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PTN-Utils"
-version = "0.1.0"
+version = "0.2.0"
 description = "Common utilities for multiple PTN Bots"
 authors = [
     { name = "Conshmea"},
@@ -17,6 +17,7 @@ requires-python = ">=3.10"
 dependencies = [
     "discord-py>=2.0",
     "python-dotenv>=0.15.0",
+    "loguru>=0.7.3",
 ]
 
 [tool.setuptools.packages.find]
