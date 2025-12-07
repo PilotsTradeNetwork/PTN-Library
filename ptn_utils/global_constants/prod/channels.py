@@ -7,14 +7,14 @@ For consistency, please prepend all categories with "CAT_", all channels with "C
 """
 
 # Categories
-CAT_TRADE = 801558838414409738  # PTN Trade Carrier category
-CAT_ARCHIVE = 1048957416781393970  # PTN Archive category
-CAT_SOMM = 1077429676470976512  # PTN Sommelier category
-CAT_FACTION = 829214377352757259  # PTN Faction category
-CAT_TRAINING = 1120269131476901938  # PTN CCO Training category
 CAT_ADMIN_ARCHIVE = 1299808868326576169  # PTN Admin Archive category
+CAT_ARCHIVE = 1048957416781393970  # PTN Archive category
 CAT_CC = 877107894452117544  # PTN Community Carrier category
+CAT_FACTION = 829214377352757259  # PTN Faction category
 CAT_SC = 1252708784866983976  # PTN Star Citizen Community category
+CAT_SOMM = 1077429676470976512  # PTN Sommelier category
+CAT_TRADE = 801558838414409738  # PTN Trade Carrier category
+CAT_TRAINING = 1120269131476901938  # PTN CCO Training category
 
 
 # Channels
@@ -54,6 +54,7 @@ CHANNEL_DEV_PICO_BOT = 1258070176101044314  # PTN star-citizen-bot channel
 CHANNEL_DEV_ROOMBA_BOT = 964609378307158096  # PTN roomba channel
 CHANNEL_DEV_SPY_PLANE = 873124212406099988  # PTN spy-plane channel
 CHANNEL_DEV_STEVE_BOT = 827656814911815702  # PTN booze-bot channel
+CHANNEL_EVENT_ARCHIVE = 1427299607423226046  # PTN community-channel-archive channel
 CHANNEL_FARMING_DISCUSSION = 1310393975772938320  # farming discussion chat channel
 CHANNEL_FORUM = 1171139329670787102  # PTN forum channel
 CHANNEL_LORE = 1014433123536224296  # lore-and-narrative channel
