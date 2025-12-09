@@ -14,7 +14,36 @@ from ptn_utils.logger.InterceptHandler import InterceptHandler
 
 LOG_SINKS: dict[str, int] = {}
 
-logger = logger.bind(logger_name="ptnlogger")
+# Global registry of all logger names across all PTN bots
+LOGGER_NAMES: set[str] = set()
+
+
+def get_logger(logger_name: str, **extra_context):
+    """
+    Get a bound logger and register the name for autocomplete.
+
+    Args:
+        logger_name: Hierarchical logger name (e.g., 'boozebot.database')
+        **extra_context: Additional context to bind to the logger
+
+    Returns:
+        Bound logger instance
+    """
+    LOGGER_NAMES.add(logger_name)
+    return logger.bind(logger_name=logger_name, **extra_context)
+
+
+logger = get_logger("ptnlogger")
+
+
+def clear_logger_registry():
+    """Clear the logger registry (useful for testing)."""
+    LOGGER_NAMES.clear()
+
+
+def get_registered_loggers() -> list[str]:
+    """Get all registered logger names (useful for debugging)."""
+    return sorted(LOGGER_NAMES)
 
 
 def create_default_logger_sink(level: str) -> None:
@@ -85,35 +114,50 @@ class LogLevels(Enum):
     Warning = "WARNING"
     Info = "INFO"
     Debug = "DEBUG"
+    Trace = "TRACE"
 
 
 async def set_logging_level_autocomplete(
     interaction: Interaction,
     current: str,
 ) -> List[app_commands.Choice[str]]:
-    all_loggers = [logging.getLogger(name).name for name in logging.root.manager.loggerDict]
-    if "." in current.lower():
-        pass  # we've already specified a package. Shouldn't have more than 25 loggers in one package, _right_?
+    # Get stdlib loggers, loguru loggers from our registry, sort, and remove duplicates
+    all_loggers = sorted({logging.getLogger(name).name for name in logging.root.manager.loggerDict} | LOGGER_NAMES)
+
+    # Extract top-level package names from hierarchical loggers
+    if "." not in current.lower():
+        # Show top-level packages (e.g., "boozebot", "discord", etc.)
+        # Extract first component of each logger name
+        top_level = set()
+        for logger_name in all_loggers:
+            if "." in logger_name:
+                top_level.add(logger_name.split(".")[0])
+            else:
+                top_level.add(logger_name)
+        all_loggers = sorted(top_level)
+        logger.debug(f"No dot in current input '{current}', showing {len(all_loggers)} top-level packages")
     else:
-        all_loggers = [x for x in all_loggers if "." not in x]  # yeet subpackages if we haven't selected a package yet
+        # User has typed a dot, show matching hierarchical loggers
+        logger.debug(f"Dot found in current input '{current}', showing hierarchical loggers")
 
     if len(all_loggers) > 25:
-        """
-        Safety valve in case one or both of the assumptions above fail:
-            - >25 top-level packages or 
-            - >25 loggers for a given top-level package
-        
-        Generate a warning and move on. Log the full list in debug if we care to check it out later
-        """
-
+        # Generate a warning and move on. Log the full list in debug if we care to check it out later
         logger.warning("Autocomplete returned more options than Discord can handle. Truncating to 25")
         logger.debug(all_loggers)
     all_loggers = all_loggers[:25]
-    return [
+
+    # Filter by current input
+    filtered = [
         app_commands.Choice(name=logger_name, value=logger_name)
         for logger_name in all_loggers
         if current.lower() in logger_name.lower()
     ]
+
+    logger.debug(f"Final autocomplete results for '{current}': {len(filtered)} options")
+    if filtered:
+        logger.debug(f"First few results: {[c.name for c in filtered[:5]]}")
+
+    return filtered
 
 
 class Logger(commands.Cog):
