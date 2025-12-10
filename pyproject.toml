@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PTN-Utils"
-version = "0.2.0"
+version = "0.2.2"
 description = "Common utilities for multiple PTN Bots"
 authors = [
     { name = "Conshmea"},
