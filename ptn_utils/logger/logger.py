@@ -140,18 +140,20 @@ async def set_logging_level_autocomplete(
         # User has typed a dot, show matching hierarchical loggers
         logger.debug(f"Dot found in current input '{current}', showing hierarchical loggers")
 
-    if len(all_loggers) > 25:
-        # Generate a warning and move on. Log the full list in debug if we care to check it out later
-        logger.warning("Autocomplete returned more options than Discord can handle. Truncating to 25")
-        logger.debug(all_loggers)
-    all_loggers = all_loggers[:25]
-
-    # Filter by current input
+    # Filter by current input before truncating
     filtered = [
-        app_commands.Choice(name=logger_name, value=logger_name)
+        logger_name
         for logger_name in all_loggers
         if current.lower() in logger_name.lower()
     ]
+
+    if len(filtered) > 25:
+        # Generate a warning and move on. Log the full list in debug if we care to check it out later
+        logger.warning("Autocomplete returned more options than Discord can handle. Truncating to 25")
+        logger.debug(filtered)
+
+    # Convert to Choice objects
+    filtered = [app_commands.Choice(name=logger_name, value=logger_name) for logger_name in filtered[:25]]
 
     logger.debug(f"Final autocomplete results for '{current}': {len(filtered)} options")
     if filtered:
