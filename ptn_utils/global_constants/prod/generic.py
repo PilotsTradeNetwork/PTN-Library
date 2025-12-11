@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 
 # define paths
-TESTING_DATA_PATH = os.getcwd()  # defines the path for use in a local testing environment
+TESTING_DATA_PATH = os.path.join(os.getcwd(), "data")  # defines the path for use in a local testing environment
 DATA_DIR = os.getenv("DATA_DIR", TESTING_DATA_PATH)
 
 # Get the discord token from the local .env file. Deliberately not hosted in the repo or Discord takes the bot down
