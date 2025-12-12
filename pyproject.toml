@@ -23,7 +23,7 @@ dynamic = ["version"]
 [tool.setuptools_scm]
 # this is used populated when creating a git archive
 # and when there is .git dir and/or there is no git installed
-fallback_version = "9999.$Format:%h-%cs$"
+fallback_version = "0.0.0+unknown"
 
 [tool.setuptools.packages.find]
 where = ["."]
