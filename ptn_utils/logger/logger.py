@@ -7,7 +7,7 @@ from typing import List
 from discord import Interaction, app_commands
 from discord.app_commands import autocomplete
 from discord.ext import commands
-from loguru import logger
+import loguru
 
 from ptn_utils.global_constants import any_council_role
 from ptn_utils.logger.InterceptHandler import InterceptHandler
@@ -30,7 +30,7 @@ def get_logger(logger_name: str, **extra_context):
         Bound logger instance
     """
     LOGGER_NAMES.add(logger_name)
-    return logger.bind(logger_name=logger_name, **extra_context)
+    return loguru.logger.bind(logger_name=logger_name, **extra_context)
 
 
 logger = get_logger("ptnlogger")
@@ -50,7 +50,7 @@ def create_default_logger_sink(level: str) -> None:
     if "_default" in LOG_SINKS:
         logger.remove(LOG_SINKS["_default"])
 
-    def filter_function(record: dict) -> bool:
+    def filter_function(record: loguru.Record) -> bool:
         record_logger_name = record["extra"].get("logger_name", []).split(".")
         for logger_name in LOG_SINKS:
             if logger_name == "_default":
@@ -61,7 +61,7 @@ def create_default_logger_sink(level: str) -> None:
                     return False
         return True
 
-    sink_id = logger.add(
+    sink_id = loguru.logger.add(
         stdout,
         level=level,
         filter=filter_function,
@@ -73,14 +73,14 @@ def create_logger_sink(logger_name: str, level: str) -> None:
     if logger_name in LOG_SINKS:
         logger.remove(LOG_SINKS[logger_name])
 
-    def filter_function(record: dict) -> bool:
+    def filter_function(record: loguru.Record) -> bool:
         record_logger_name = record["extra"].get("logger_name", []).split(".")
         logger_name_list = logger_name.split(".")
         if len(record_logger_name) >= len(logger_name_list):
             return record_logger_name[: len(logger_name_list)] == logger_name_list
         return False
 
-    sink_id = logger.add(
+    sink_id = loguru.logger.add(
         stdout,
         level=level,
         filter=filter_function,
@@ -98,6 +98,8 @@ def setup_logging() -> None:
 
     # Set default logging level from environment variable or INFO
     loglevel_input = os.getenv("PTN_LOG_LEVEL")
+    if not loglevel_input:
+        loglevel_input = "INFO"
     try:
         LogLevels(loglevel_input)
     except ValueError:

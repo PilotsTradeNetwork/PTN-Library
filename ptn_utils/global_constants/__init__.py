@@ -35,9 +35,9 @@ EMBED_COLOUR_WARNING = 0xFFD700  # and it was all yellow
 ### Dicts                ###
 ############################
 
-any_moderation_role = [ROLE_COUNCIL, ROLE_MOD]
-any_council_role = [ROLE_COUNCIL, ROLE_ADVISOR]
-any_elevated_role = [
+any_moderation_role: list[int] = [ROLE_COUNCIL, ROLE_MOD]
+any_council_role: list[int] = [ROLE_COUNCIL, ROLE_ADVISOR]
+any_elevated_role: list[int] = [
     ROLE_COUNCIL,
     ROLE_MOD,
     ROLE_ALUMNI,
@@ -52,7 +52,7 @@ any_elevated_role = [
     ROLE_PATH,
     ROLE_SPEC,
 ]
-color_roles = [
+color_roles: list[int] = [
     ROLE_COLOR_ALUMNI,
     ROLE_COLOR_SOMM,
     ROLE_COLOR_CONN,
@@ -66,7 +66,7 @@ color_roles = [
     ROLE_COLOR_SPEC,
 ]
 
-functional_roles = [
+functional_roles: list[int] = [
     ROLE_ALUMNI,
     ROLE_GRAPE,
     ROLE_SOMM,
@@ -81,7 +81,7 @@ functional_roles = [
 ]
 
 # Mapping of functional roles to color roles
-role_to_color = {
+role_to_color: dict[int, int] = {
     ROLE_ALUMNI: ROLE_COLOR_ALUMNI,
     ROLE_GRAPE: ROLE_COLOR_GRAPE,
     ROLE_SOMM: ROLE_COLOR_SOMM,
