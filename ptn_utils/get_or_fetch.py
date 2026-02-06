@@ -1,6 +1,6 @@
 import logging
 
-from discord import Guild, Thread, Role, Member, Emoji, GuildSticker
+from discord import Guild, Thread, Role, Member, Emoji, GuildSticker, User
 from discord.ext import commands
 from discord.abc import GuildChannel
 from typing import Optional
@@ -33,6 +33,14 @@ class GetOrFetch:
         guild = await self.guild(self.guild_id)
         try:
             return guild.get_member(member_id) or await guild.fetch_member(member_id)
+        except Exception as e:
+            logging.exception(e)
+            return None
+
+    async def user(self, user_id: int) -> User | None:
+        """Fetch a user from discord."""
+        try:
+            return self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
         except Exception as e:
             logging.exception(e)
             return None
