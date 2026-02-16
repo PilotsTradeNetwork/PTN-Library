@@ -1,5 +1,7 @@
 import ast
 import os
+from dotenv import load_dotenv
+
 
 _production = ast.literal_eval(os.environ.get("PTN_SERVICE", "False"))
 
@@ -94,3 +96,15 @@ role_to_color: dict[int, int] = {
     ROLE_PATH: ROLE_COLOR_PATH,
     ROLE_SPEC: ROLE_COLOR_SPEC,
 }
+
+############################
+### Paths and env        ###
+############################
+
+TESTING_DATA_PATH = os.path.join(os.getcwd(), "ptn", "data")  # defines the path for use in a local testing environment
+DATA_DIR = os.getenv("DATA_DIR", TESTING_DATA_PATH)
+
+# Get the discord token from the local .env file. Deliberately not hosted in the repo or Discord takes the bot down
+# because the keys are exposed. DO NOT HOST IN THE PUBLIC REPO.
+# load_dotenv(os.path.join(DATA_DIR, '.env'))
+load_dotenv(os.path.join(DATA_DIR, ".env"))
