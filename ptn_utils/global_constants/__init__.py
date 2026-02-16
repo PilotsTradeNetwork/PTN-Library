@@ -1,5 +1,7 @@
 import ast
 import os
+from dotenv import load_dotenv
+
 
 _production = ast.literal_eval(os.environ.get("PTN_SERVICE", "False"))
 

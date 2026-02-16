@@ -2,8 +2,6 @@
 import discord
 import os
 
-from dotenv import load_dotenv
-
 
 # define bot token
 TOKEN = os.getenv("DISCORD_TOKEN_PROD")
