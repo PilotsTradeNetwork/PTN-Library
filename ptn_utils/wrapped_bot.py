@@ -5,10 +5,6 @@ from .get_or_fetch import GetOrFetch
 from .helpers.checks import Checks
 from .global_constants import DISCORD_GUILD, _production
 from .helpers.error_handling import ErrorHandler
-from ptn_utils.helpers.checks import Checks
-from ptn_utils.global_constants import DISCORD_GUILD, _production
-from ptn_utils.helpers.error_handling import ErrorHandler
-
 
 # Added for type hints
 class WrappedBot(Bot):
@@ -26,6 +22,6 @@ class WrappedBot(Bot):
         self.get_or_fetch = GetOrFetch(self, DISCORD_GUILD)
         self.checks = Checks(self.get_or_fetch)
         self.error_handler = ErrorHandler(self.get_or_fetch)
-        
+
         self.tree.on_error = self.error_handler.on_app_command_error
         self.add_listener(self.error_handler.on_generic_error, "on_command_error")

@@ -21,20 +21,25 @@ logger = get_logger("ptn_utils.helpers.decorators")
 
 
 class Checks:
-    permitted_role_id: list[int]
-    permitted_channel_id: list[int]
     get_or_fetch: GetOrFetch
 
     def __init__(self, get_or_fetch: GetOrFetch):
         self.get_or_fetch = get_or_fetch
-        self.permitted_channel_id = []
-        self.permitted_role_id = []
 
     # decorator for interaction channel checks
-    def check_command_channel(self, permitted_channel_id: list[int] | int):
+    def command_channel(self, permitted_channel_id: list[int] | int):
         """
         Decorator used on a command to limit it to specified channels
         """
+
+        if not permitted_channel_id:
+            raise ValueError("No Channels specified!")
+
+        permitted_channel_id = (
+            permitted_channel_id
+            if isinstance(permitted_channel_id, list)
+            else [permitted_channel_id]
+        )
 
         async def check_channel(interaction: Interaction) -> bool:
             """
@@ -46,83 +51,77 @@ class Checks:
 
             assert isinstance(interaction.channel, GuildChannel)
             logger.debug(
-                f"check_command_channel called: {interaction.user.name} in {interaction.channel.name} ({interaction.channel.id}). Permitted Channel IDs: {self.permitted_channel_id}"
+                f"check_command_channel called: {interaction.user.name} in {interaction.channel.name} ({interaction.channel.id}). Permitted Channel IDs: {permitted_channel_id}"
             )
 
-            permission = interaction.channel_id in self.permitted_channel_id
+            permission = interaction.channel_id in permitted_channel_id
 
             if not permission:
                 # check has failed, now assemble data for error message
                 permitted_channels: list[str] = []
-                for channel_id in self.permitted_channel_id:
+                for channel_id in permitted_channel_id:
                     channel = await self.get_or_fetch.channel(channel_id)
                     if not channel:
                         logger.error(f"Unknown Channel: {channel_id}")
                         continue
                     permitted_channels.append(channel.mention)
                 formatted_channel_list = " • ".join(permitted_channels)
-                raise CommandChannelError(
-                    self.permitted_channel_id, formatted_channel_list
-                )
+                raise CommandChannelError(permitted_channel_id, formatted_channel_list)
 
             return True
 
-        if not permitted_channel_id:
-            raise ValueError("No Channels specified!")
-
-        self.permitted_channel_id = (
-            permitted_channel_id
-            if isinstance(permitted_channel_id, list)
-            else [permitted_channel_id]
-        )
         return check(check_channel)
 
-    def check_roles(self, permitted_role_id: list[int] | int):
+    def roles(self, permitted_role_id: list[int] | int):
         """
         Decorator used on a command to limit it to specified roles
         """
+
+        if not permitted_role_id:
+            raise ValueError("No Roles specified!")
+
+        permitted_role_id = (
+            permitted_role_id
+            if isinstance(permitted_role_id, list)
+            else [permitted_role_id]
+        )
 
         async def check_role(interaction: Interaction) -> bool:
             """
             Check if the user has at least one of the permitted roles to run a command
             """
-            user_role_ids: list[int] = [role.id for role in interaction.user.roles]
+
+            user_role_ids: list[int] = [role.id for role in interaction.user.roles]  # pyright: ignore[reportAttributeAccessIssue]
             logger.debug(
-                f"check_role called on {interaction.user.name}. Roles: {user_role_ids}. Permitted role IDs: {self.permitted_role_id}"
+                f"check_role called on {interaction.user.name}. Roles: {user_role_ids}. Permitted role IDs: {permitted_role_id}"
             )
 
-            permission = set(self.permitted_role_id) & set(user_role_ids)
+            permission = set(permitted_role_id) & set(user_role_ids)
             logger.debug(
                 f"User {'has' if permission else 'does not have'} permission.",
             )
             if not permission:
                 permitted_roles: list[Role | None] = []
-                for role_id in self.permitted_role_id:
+                for role_id in permitted_role_id:
                     role = await self.get_or_fetch.role(role_id)
                     if not role:
                         logger.error(f"Unknown Role: {role_id}")
                     permitted_roles.append(role)
                 logger.debug(f"permitted_roles: {permitted_roles}")
                 formatted_role_list = " • ".join(
-                    [f"{role.mention} " for role in permitted_roles]
-                )  # pyright: ignore[reportOptionalMemberAccess]
-                raise CommandRoleError(self.permitted_role_id, formatted_role_list)
+                    [f"{role.mention} " for role in permitted_roles]  # pyright: ignore[reportOptionalMemberAccess]
+                )
+                raise CommandRoleError(permitted_role_id, formatted_role_list)
 
             return True
 
-        if not permitted_role_id:
-            raise ValueError("No Roles specified!")
-
-        self.permitted_role_id = (
-            permitted_role_id
-            if isinstance(permitted_role_id, list)
-            else [permitted_role_id]
-        )
         return check(check_role)
 
-    def check_category_perms(self):
+    def category_perms(self):
         """
         Decorator used on a command to limit it to endgame roles in their specific category
+
+        NOTE: This will NOT function as a category-specific override for check.roles. If this decorator and check.roles are used on the same command, BOTH must be satisfied for the command to proceed.
         """
 
         async def check_category_perms_aux(interaction: Interaction):
@@ -152,7 +151,7 @@ class Checks:
 
             # Debug logging of user/permitted roles will come from check_roles. No need to repeat here.
             try:
-                _unused = self.check_roles(permitted_role_ids)
+                _unused = self.roles(permitted_role_ids)
             except CommandRoleError:
                 logger.error(
                     f"❌ {interaction.user.name} does not have permission to run this command in this category"
