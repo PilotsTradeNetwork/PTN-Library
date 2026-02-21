@@ -1,5 +1,4 @@
 from discord import CategoryChannel, Interaction, Role
-import discord
 from discord.abc import GuildChannel
 from discord.ext.commands import NoPrivateMessage
 from discord.app_commands import check
@@ -72,7 +71,7 @@ class Checks:
 
         return check(check_channel)
 
-    async def check_roles(self, interaction: Interaction, permitted_role_id: list[int]) -> bool:
+    async def _check_roles(self, interaction: Interaction, permitted_role_id: list[int]) -> bool:
         user_role_ids: list[int] = [role.id for role in
                                     interaction.user.roles]  # pyright: ignore[reportAttributeAccessIssue]
         logger.debug(
@@ -116,7 +115,7 @@ class Checks:
             """
             Check if the user has at least one of the permitted roles to run a command
             """
-            return await self.check_roles(interaction, permitted_role_id)
+            return await self._check_roles(interaction, permitted_role_id)
 
 
         return check(check_role_aux)
@@ -155,7 +154,7 @@ class Checks:
 
             # Debug logging of user/permitted roles will come from check_roles. No need to repeat here.
             try:
-                _unused = await self.check_roles(interaction, permitted_role_ids)
+                _unused = await self._check_roles(interaction, permitted_role_ids)
             except CommandRoleError:
                 logger.error(
                     f"❌ {interaction.user.name} does not have permission to run this command in this category"
