@@ -1,4 +1,5 @@
 from discord import CategoryChannel, Interaction, Role
+import discord
 from discord.abc import GuildChannel
 from discord.ext.commands import NoPrivateMessage
 from discord.app_commands import check
@@ -18,7 +19,6 @@ from ptn_utils.logger.logger import get_logger
 from ptn_utils.classes.ErrorClasses import CommandRoleError, CommandChannelError
 
 logger = get_logger("ptn_utils.helpers.decorators")
-
 
 class Checks:
     get_or_fetch: GetOrFetch
@@ -72,6 +72,32 @@ class Checks:
 
         return check(check_channel)
 
+    async def check_roles(self, interaction: Interaction, permitted_role_id: list[int]) -> bool:
+        user_role_ids: list[int] = [role.id for role in
+                                    interaction.user.roles]  # pyright: ignore[reportAttributeAccessIssue]
+        logger.debug(
+            f"check_role called on {interaction.user.name}. Roles: {user_role_ids}. Permitted role IDs: {permitted_role_id}"
+        )
+
+        permission = set(permitted_role_id) & set(user_role_ids)
+        logger.debug(
+            f"User {'has' if permission else 'does not have'} permission.",
+        )
+        if not permission:
+            permitted_roles: list[Role | None] = []
+            for role_id in permitted_role_id:
+                role = await self.get_or_fetch.role(role_id)
+                if not role:
+                    logger.error(f"Unknown Role: {role_id}")
+                permitted_roles.append(role)
+            logger.debug(f"permitted_roles: {permitted_roles}")
+            formatted_role_list = " • ".join(
+                [f"{role.mention} " for role in permitted_roles]  # pyright: ignore[reportOptionalMemberAccess]
+            )
+            raise CommandRoleError(permitted_role_id, formatted_role_list)
+
+        return True
+
     def roles(self, permitted_role_id: list[int] | int):
         """
         Decorator used on a command to limit it to specified roles
@@ -86,36 +112,14 @@ class Checks:
             else [permitted_role_id]
         )
 
-        async def check_role(interaction: Interaction) -> bool:
+        async def check_role_aux(interaction: Interaction) -> bool:
             """
             Check if the user has at least one of the permitted roles to run a command
             """
+            return await self.check_roles(interaction, permitted_role_id)
 
-            user_role_ids: list[int] = [role.id for role in interaction.user.roles]  # pyright: ignore[reportAttributeAccessIssue]
-            logger.debug(
-                f"check_role called on {interaction.user.name}. Roles: {user_role_ids}. Permitted role IDs: {permitted_role_id}"
-            )
 
-            permission = set(permitted_role_id) & set(user_role_ids)
-            logger.debug(
-                f"User {'has' if permission else 'does not have'} permission.",
-            )
-            if not permission:
-                permitted_roles: list[Role | None] = []
-                for role_id in permitted_role_id:
-                    role = await self.get_or_fetch.role(role_id)
-                    if not role:
-                        logger.error(f"Unknown Role: {role_id}")
-                    permitted_roles.append(role)
-                logger.debug(f"permitted_roles: {permitted_roles}")
-                formatted_role_list = " • ".join(
-                    [f"{role.mention} " for role in permitted_roles]  # pyright: ignore[reportOptionalMemberAccess]
-                )
-                raise CommandRoleError(permitted_role_id, formatted_role_list)
-
-            return True
-
-        return check(check_role)
+        return check(check_role_aux)
 
     def category_perms(self):
         """
@@ -151,7 +155,7 @@ class Checks:
 
             # Debug logging of user/permitted roles will come from check_roles. No need to repeat here.
             try:
-                _unused = self.roles(permitted_role_ids)
+                _unused = await self.check_roles(interaction, permitted_role_ids)
             except CommandRoleError:
                 logger.error(
                     f"❌ {interaction.user.name} does not have permission to run this command in this category"
