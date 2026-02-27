@@ -17,7 +17,7 @@ from ptn_utils.global_constants import (
 from ptn_utils.logger.logger import get_logger
 from ptn_utils.classes.ErrorClasses import CommandRoleError, CommandChannelError
 
-logger = get_logger("ptn_utils.helpers.decorators")
+logger = get_logger("ptn_utils.helpers.checks")
 
 class Checks:
     get_or_fetch: GetOrFetch
@@ -83,11 +83,12 @@ class Checks:
             f"User {'has' if permission else 'does not have'} permission.",
         )
         if not permission:
-            permitted_roles: list[Role | None] = []
+            permitted_roles: list[Role] = []
             for role_id in permitted_role_id:
                 role = await self.get_or_fetch.role(role_id)
                 if not role:
                     logger.error(f"Unknown Role: {role_id}")
+                    continue
                 permitted_roles.append(role)
             logger.debug(f"permitted_roles: {permitted_roles}")
             formatted_role_list = " • ".join(
@@ -154,7 +155,7 @@ class Checks:
 
             # Debug logging of user/permitted roles will come from check_roles. No need to repeat here.
             try:
-                _unused = await self._check_roles(interaction, permitted_role_ids)
+                await self._check_roles(interaction, permitted_role_ids)
             except CommandRoleError:
                 logger.error(
                     f"❌ {interaction.user.name} does not have permission to run this command in this category"

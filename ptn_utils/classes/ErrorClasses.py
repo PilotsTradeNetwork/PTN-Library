@@ -8,9 +8,7 @@ class CommandChannelError(CheckFailure):  # channel check error
     def __init__(self, permitted_channel_id: list[int], formatted_channel_list: str):
         self.permitted_channel_id = permitted_channel_id
         self.formatted_channel_list = formatted_channel_list
-        super().__init__(
-            permitted_channel_id, formatted_channel_list, "Channel check error raised"
-        )
+        super().__init__(f"Channel check error raised: {permitted_channel_id=}, {formatted_channel_list=}")
 
 
 class CommandRoleError(CheckFailure):  # role check error
@@ -20,9 +18,7 @@ class CommandRoleError(CheckFailure):  # role check error
     def __init__(self, permitted_role_id: list[int], formatted_role_list: str):
         self.permitted_role_id = permitted_role_id
         self.formatted_role_list = formatted_role_list
-        super().__init__(
-            permitted_role_id, formatted_role_list, "Role check error raised"
-        )
+        super().__init__(f"Role check error raised: {permitted_role_id=}, {formatted_role_list=}")
 
 
 class AsyncioTimeoutError(Exception):
@@ -35,7 +31,7 @@ class AsyncioTimeoutError(Exception):
         self.isprivate = isprivate
 
 
-class SilentError(Exception):  # generic error
+class SilentError(Exception):  # silent error
     pass
 
 
