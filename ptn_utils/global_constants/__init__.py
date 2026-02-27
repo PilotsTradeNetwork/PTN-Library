@@ -1,3 +1,5 @@
+# ruff: noqa: F403
+# ruff: noqa: F405
 import ast
 import os
 
