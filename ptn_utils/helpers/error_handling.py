@@ -1,7 +1,6 @@
 from typing import Any
 
-from discord import DMChannel, DiscordException, Embed, Interaction, TextChannel
-from discord.abc import Messageable
+from discord import DiscordException, Embed, Interaction, TextChannel, Thread
 from discord.app_commands import AppCommandError
 from discord.app_commands.errors import CommandInvokeError as app_CommandInvokeError
 from discord.ext.commands.errors import CommandInvokeError as ext_CommandInvokeError
@@ -39,9 +38,9 @@ class ErrorHandler:
     def __init__(self, get_or_fetch: GetOrFetch):
         self.get_or_fetch = get_or_fetch
 
-    async def on_generic_error(
-        self, ctx: Interaction | Context[Any], error: CommandError
-    ):  # an error handler for our custom errors
+    async def on_generic_error(self, ctx: Interaction | Context[Any], error: CommandError):
+        """An error handler for our custom errors"""
+
         async def send_reply(ctx: Interaction | Context[Any], embed: Embed, isprivate: bool):
             is_interaction = isinstance(ctx, Interaction)
             try:
@@ -52,7 +51,7 @@ class ErrorHandler:
                         await ctx.followup.send(embed=embed, ephemeral=isprivate)
                 else:
                     await ctx.channel.send(embed=embed)
-            except Exception as e:
+            except DiscordException as e:
                 logger.exception(e)
 
         if isinstance(error, ext_CommandInvokeError):
@@ -70,7 +69,7 @@ class ErrorHandler:
 
             spamchannel = await self.get_or_fetch.channel(CHANNEL_BOTSPAM)
 
-            assert isinstance(spamchannel, Messageable)
+            assert isinstance(spamchannel, (TextChannel, Thread))
             assert ctx.command is not None
             assert ctx.channel is not None
 
@@ -81,7 +80,7 @@ class ErrorHandler:
             )
             await spamchannel.send(embed=spam_embed)
 
-        except Exception as e:
+        except DiscordException as e:
             logger.error(e)
 
         if isinstance(err, GenericError):
@@ -90,9 +89,8 @@ class ErrorHandler:
 
             await send_reply(ctx, embed, False)
 
-        elif isinstance(
-            err, CustomError
-        ):  # this class receives custom error messages and displays either privately or publicly
+        # this class receives custom error messages and displays either privately or publicly
+        elif isinstance(err, CustomError):
             message = err.message
             logger.error(f"❌ Raised CustomError from {err} with message {message}")
             embed = Embed(description=f"❌ {message}", color=EMBED_COLOUR_ERROR)
@@ -105,7 +103,6 @@ class ErrorHandler:
             embed = Embed(
                 description=f"❌⏲ {message}", color=EMBED_COLOUR_ERROR
             )
-
             await send_reply(ctx, embed, err.isprivate)
 
         elif isinstance(err, SilentError):
@@ -115,13 +112,10 @@ class ErrorHandler:
             logger.error(f"❌ Error {err} was not caught by on_generic_error")
 
 
-    async def on_app_command_error(
-        self, interaction: Interaction, error: AppCommandError
-    ):  # an error handler for discord.py errors
-
+    async def on_app_command_error(self, interaction: Interaction, error: AppCommandError):
+        """An error handler for discord.py errors"""
         assert interaction.command is not None
-        assert isinstance(interaction.channel, Messageable)
-        assert not isinstance(interaction.channel, DMChannel)
+        assert isinstance(interaction.channel, (TextChannel, Thread))
 
         if isinstance(error, app_CommandInvokeError):
             err = error.original
@@ -160,7 +154,6 @@ class ErrorHandler:
                         description=f"**Permission denied**: You need the following role to use this command:\n{formatted_role_list}",
                         color=EMBED_COLOUR_ERROR,
                     )
-                logger.debug("notify user")
                 try:
                     await interaction.response.send_message(embed=embed, ephemeral=True)
                 except DiscordException:
@@ -178,12 +171,12 @@ class ErrorHandler:
                         await interaction.response.send_message(
                             embed=embed, ephemeral=True
                         )
-                    except Exception:
+                    except DiscordException:
                         await interaction.followup.send(embed=embed, ephemeral=True)
                 else:  # message should be public - use for CCO commands
                     try:
                         await interaction.response.send_message(embed=embed)
-                    except Exception:
+                    except DiscordException:
                         await interaction.followup.send(embed=embed)
 
             elif isinstance(err, GenericError):
@@ -193,7 +186,7 @@ class ErrorHandler:
                 )
                 try:
                     await interaction.response.send_message(embed=embed, ephemeral=True)
-                except Exception:
+                except DiscordException:
                     await interaction.followup.send(embed=embed, ephemeral=True)
 
             else:
@@ -203,25 +196,21 @@ class ErrorHandler:
                 )
                 try:
                     await interaction.response.send_message(embed=embed, ephemeral=True)
-                except Exception:
+                except DiscordException:
                     await interaction.followup.send(embed=embed, ephemeral=True)
-
         except Exception as e:
             logger.error(f"An error occurred in the error handler (lol): {e}")
 
 
-    async def on_background_error(
-        self, error: BackgroundError
-    ):  # an error handler for interactionless errors
+    async def on_background_error(self, error: BackgroundError):
+        """An error handler for interactionless errors"""
         logger.error(f"⚠ Handler received background error: {error}")
-
         try:
             spamchannel = await self.get_or_fetch.channel(CHANNEL_BOTSPAM)
-            assert isinstance(spamchannel, Messageable)
+            assert isinstance(spamchannel, (TextChannel, Thread))
             spam_embed = Embed(
                 description=f":warning: {error.message}", color=EMBED_COLOUR_WARNING
             )
             await spamchannel.send(embed=spam_embed)
-
-        except Exception as e:
+        except DiscordException as e:
             logger.error(e)

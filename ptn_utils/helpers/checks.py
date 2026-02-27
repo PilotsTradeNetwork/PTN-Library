@@ -1,7 +1,6 @@
-from discord import CategoryChannel, Interaction, Role
+from discord import CategoryChannel, Interaction, Role, Member
 from discord.abc import GuildChannel
-from discord.ext.commands import NoPrivateMessage
-from discord.app_commands import check
+from discord.app_commands import check, NoPrivateMessage
 from ptn_utils.get_or_fetch import GetOrFetch
 from ptn_utils.global_constants import (
     any_moderation_role,
@@ -19,6 +18,7 @@ from ptn_utils.classes.ErrorClasses import CommandRoleError, CommandChannelError
 
 logger = get_logger("ptn_utils.helpers.checks")
 
+
 class Checks:
     get_or_fetch: GetOrFetch
 
@@ -27,9 +27,7 @@ class Checks:
 
     # decorator for interaction channel checks
     def command_channel(self, permitted_channel_id: list[int] | int):
-        """
-        Decorator used on a command to limit it to specified channels
-        """
+        """Decorator used on a command to limit it to specified channels"""
 
         if not permitted_channel_id:
             raise ValueError("No Channels specified!")
@@ -41,16 +39,15 @@ class Checks:
         )
 
         async def check_channel(interaction: Interaction) -> bool:
-            """
-            Check if the channel the command was run from matches any permitted channels for that command
-            """
+            """Check if the channel the command was run from matches any permitted channels for that command"""
 
             if interaction.guild is None:
                 raise NoPrivateMessage()
 
             assert isinstance(interaction.channel, GuildChannel)
             logger.debug(
-                f"check_command_channel called: {interaction.user.name} in {interaction.channel.name} ({interaction.channel.id}). Permitted Channel IDs: {permitted_channel_id}"
+                f"check_command_channel called: {interaction.user.name} in {interaction.channel.name} "
+                + f"({interaction.channel.id}). Permitted Channel IDs: {permitted_channel_id}"
             )
 
             permission = interaction.channel_id in permitted_channel_id
@@ -72,8 +69,8 @@ class Checks:
         return check(check_channel)
 
     async def _check_roles(self, interaction: Interaction, permitted_role_id: list[int]) -> bool:
-        user_role_ids: list[int] = [role.id for role in
-                                    interaction.user.roles]  # pyright: ignore[reportAttributeAccessIssue]
+        assert isinstance(interaction.user, Member)
+        user_role_ids: list[int] = [role.id for role in interaction.user.roles]
         logger.debug(
             f"check_role called on {interaction.user.name}. Roles: {user_role_ids}. Permitted role IDs: {permitted_role_id}"
         )
@@ -91,9 +88,7 @@ class Checks:
                     continue
                 permitted_roles.append(role)
             logger.debug(f"permitted_roles: {permitted_roles}")
-            formatted_role_list = " • ".join(
-                [f"{role.mention} " for role in permitted_roles]  # pyright: ignore[reportOptionalMemberAccess]
-            )
+            formatted_role_list = " • ".join([f"{role.mention} " for role in permitted_roles])
             raise CommandRoleError(permitted_role_id, formatted_role_list)
 
         return True
@@ -117,7 +112,6 @@ class Checks:
             Check if the user has at least one of the permitted roles to run a command
             """
             return await self._check_roles(interaction, permitted_role_id)
-
 
         return check(check_role_aux)
 
@@ -157,9 +151,7 @@ class Checks:
             try:
                 await self._check_roles(interaction, permitted_role_ids)
             except CommandRoleError:
-                logger.error(
-                    f"❌ {interaction.user.name} does not have permission to run this command in this category"
-                )
+                logger.error(f"❌ {interaction.user.name} does not have permission to run this command in this category")
                 raise
 
             logger.debug(
