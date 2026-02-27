@@ -1,7 +1,10 @@
 from typing import Any
+
 from discord import DMChannel, DiscordException, Embed, Interaction, TextChannel
 from discord.abc import Messageable
 from discord.app_commands import AppCommandError
+from discord.app_commands.errors import CommandInvokeError as app_CommandInvokeError
+from discord.ext.commands.errors import CommandInvokeError as ext_CommandInvokeError
 from discord.ext.commands import Context, CommandError
 from ptn_utils.get_or_fetch import GetOrFetch
 from ptn_utils.global_constants import (
@@ -37,7 +40,7 @@ class ErrorHandler:
         self.get_or_fetch = get_or_fetch
 
     async def on_generic_error(
-        self, ctx: Interaction | Context[Any], error: AppCommandError
+        self, ctx: Interaction | Context[Any], error: CommandError
     ):  # an error handler for our custom errors
         async def send_reply(ctx: Interaction | Context[Any], embed: Embed, isprivate: bool):
             is_interaction = isinstance(ctx, Interaction)
@@ -52,10 +55,11 @@ class ErrorHandler:
             except Exception as e:
                 logger.exception(e)
 
-        if isinstance(error, (CommandError, AppCommandError)):
+        if isinstance(error, ext_CommandInvokeError):
             err = error.original
         else:
             err = error
+
         try:
             if isinstance(err, SilentError):
                 emoji = "🤫 SilentError"
@@ -119,7 +123,7 @@ class ErrorHandler:
         assert isinstance(interaction.channel, Messageable)
         assert not isinstance(interaction.channel, DMChannel)
 
-        if isinstance(error, (CommandError, AppCommandError)):
+        if isinstance(error, app_CommandInvokeError):
             err = error.original
         else:
             err = error
