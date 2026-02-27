@@ -1,8 +1,10 @@
+from collections.abc import Callable
 from types import CoroutineType
-from typing import Callable, Any, override
+from typing import Any, override
 
-from discord import Interaction, ButtonStyle, Message
-from discord.ui import LayoutView, Container, Section, Button, ActionRow, TextDisplay
+from discord import ButtonStyle, Interaction, Message
+from discord.ui import ActionRow, Button, Container, LayoutView, Section, TextDisplay
+
 from ptn_utils.logger.logger import get_logger
 
 logger = get_logger("ptn_utils.pagination")
@@ -84,7 +86,7 @@ class PaginationView(LayoutView):
                     title, index + (self.current_page - 1) * self.page_length
                 )
 
-                section = Section(accessory=button if button else None)
+                section = Section(accessory=button or None)
 
                 section.add_item(f"**{title}**\n{info}")
 

@@ -3,8 +3,18 @@ from typing import Any
 from discord import DiscordException, Embed, Interaction, TextChannel, Thread
 from discord.app_commands import AppCommandError
 from discord.app_commands.errors import CommandInvokeError as app_CommandInvokeError
+from discord.ext.commands import CommandError, Context
 from discord.ext.commands.errors import CommandInvokeError as ext_CommandInvokeError
-from discord.ext.commands import Context, CommandError
+
+from ptn_utils.classes.ErrorClasses import (
+    AsyncioTimeoutError,
+    BackgroundError,
+    CommandChannelError,
+    CommandRoleError,
+    CustomError,
+    GenericError,
+    SilentError,
+)
 from ptn_utils.get_or_fetch import GetOrFetch
 from ptn_utils.global_constants import (
     CHANNEL_BOTSPAM,
@@ -12,15 +22,6 @@ from ptn_utils.global_constants import (
     EMBED_COLOUR_WARNING,
 )
 from ptn_utils.logger.logger import get_logger
-from ptn_utils.classes.ErrorClasses import (
-    BackgroundError,
-    CommandChannelError,
-    CommandRoleError,
-    SilentError,
-    AsyncioTimeoutError,
-    GenericError,
-    CustomError,
-)
 
 logger = get_logger("ptn_utils.helpers.ErrorHandler")
 
@@ -54,10 +55,7 @@ class ErrorHandler:
             except DiscordException as e:
                 logger.exception(e)
 
-        if isinstance(error, ext_CommandInvokeError):
-            err = error.original
-        else:
-            err = error
+        err = error.original if isinstance(error, ext_CommandInvokeError) else error
 
         try:
             if isinstance(err, SilentError):
@@ -114,10 +112,7 @@ class ErrorHandler:
         assert interaction.command is not None
         assert isinstance(interaction.channel, (TextChannel, Thread))
 
-        if isinstance(error, app_CommandInvokeError):
-            err = error.original
-        else:
-            err = error
+        err = error.original if isinstance(error, app_CommandInvokeError) else error
 
         logger.error(
             f"❌ Error from {interaction.command.name} in {interaction.channel.name} called by {interaction.user.display_name}: {err}"

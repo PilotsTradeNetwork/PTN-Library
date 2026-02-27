@@ -1,9 +1,8 @@
 # Define whether the bot is in testing or live mode. Default is testing mode.
-import discord
 import os
 
+import discord
 from dotenv import load_dotenv
-
 
 # define paths
 TESTING_DATA_PATH = os.path.join(os.getcwd(), "ptn", "data")  # defines the path for use in a local testing environment

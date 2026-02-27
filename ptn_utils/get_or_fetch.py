@@ -1,9 +1,8 @@
 import logging
 
-from discord import Guild, Thread, Role, Member, Emoji, GuildSticker, User
-from discord.ext import commands
+from discord import Emoji, Guild, GuildSticker, Member, Role, Thread, User
 from discord.abc import GuildChannel
-from typing import Optional
+from discord.ext import commands
 
 
 class GetOrFetch:
@@ -11,7 +10,7 @@ class GetOrFetch:
         self.bot = bot
         self.guild_id = guild_id
 
-    async def guild(self, guild: int) -> Optional[Guild]:
+    async def guild(self, guild: int) -> Guild | None:
         """Return bot guild instance for use in get_member()"""
         try:
             return self.bot.get_guild(guild) or await self.bot.fetch_guild(guild)
@@ -19,7 +18,7 @@ class GetOrFetch:
             logging.exception(e)
             return None
 
-    async def channel(self, channel_id: int) -> Optional[GuildChannel | Thread]:
+    async def channel(self, channel_id: int) -> GuildChannel | Thread | None:
         """Fetch a channel or thread from the guild."""
         guild = await self.guild(self.guild_id)
         try:
@@ -28,7 +27,7 @@ class GetOrFetch:
             logging.exception(e)
             return None
 
-    async def member(self, member_id: int) -> Optional[Member]:
+    async def member(self, member_id: int) -> Member | None:
         """Fetch a member from the guild."""
         guild = await self.guild(self.guild_id)
         try:
@@ -45,7 +44,7 @@ class GetOrFetch:
             logging.exception(e)
             return None
 
-    async def role(self, role_id: int) -> Optional[Role]:
+    async def role(self, role_id: int) -> Role | None:
         """Fetch a role from the guild."""
         guild = await self.guild(self.guild_id)
         try:
@@ -54,7 +53,7 @@ class GetOrFetch:
             logging.exception(e)
             return None
 
-    async def emoji(self, emoji_id: int) -> Optional[Emoji]:
+    async def emoji(self, emoji_id: int) -> Emoji | None:
         """Fetch an emoji from the guild."""
         guild = await self.guild(self.guild_id)
         try:
@@ -63,7 +62,7 @@ class GetOrFetch:
             logging.exception(e)
             return None
 
-    async def sticker(self, sticker_id: int) -> Optional[GuildSticker]:
+    async def sticker(self, sticker_id: int) -> GuildSticker | None:
         """Fetch a sticker from the guild."""
         guild = await self.guild(self.guild_id)
         try:

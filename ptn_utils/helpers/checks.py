@@ -1,21 +1,21 @@
-from discord import CategoryChannel, Interaction, Role, Member
+from discord import CategoryChannel, Interaction, Member, Role
 from discord.abc import GuildChannel
-from discord.app_commands import check, NoPrivateMessage
+from discord.app_commands import NoPrivateMessage, check
+
+from ptn_utils.classes.ErrorClasses import CommandChannelError, CommandRoleError
 from ptn_utils.get_or_fetch import GetOrFetch
 from ptn_utils.global_constants import (
-    any_moderation_role,
-    CAT_CC,
     CAT_CT,
+    CAT_FACTION,
     CAT_SC,
     CAT_SOMM,
-    CAT_FACTION,
     ROLE_CM,
-    ROLE_PATH,
     ROLE_FO,
+    ROLE_PATH,
     ROLE_SOMM,
+    any_moderation_role,
 )
 from ptn_utils.logger.logger import get_logger
-from ptn_utils.classes.ErrorClasses import CommandRoleError, CommandChannelError
 
 logger = get_logger("ptn_utils.helpers.checks")
 
@@ -41,7 +41,7 @@ class Checks:
             """Check if the channel the command was run from matches any permitted channels for that command"""
 
             if interaction.guild is None:
-                raise NoPrivateMessage()
+                raise NoPrivateMessage
 
             assert isinstance(interaction.channel, GuildChannel)
             logger.debug(

@@ -1,14 +1,14 @@
 from __future__ import annotations
+
 import logging
 import os
 from enum import Enum
 from sys import stdout
-from typing import List
 
+import loguru
 from discord import Interaction, app_commands
 from discord.app_commands import autocomplete
 from discord.ext import commands
-import loguru
 
 from ptn_utils.global_constants import any_council_role
 from ptn_utils.logger.InterceptHandler import InterceptHandler
@@ -123,7 +123,7 @@ class LogLevels(Enum):
 async def set_logging_level_autocomplete(
     interaction: Interaction,
     current: str,
-) -> List[app_commands.Choice[str]]:
+) -> list[app_commands.Choice[str]]:
     # Get stdlib loggers, loguru loggers from our registry, sort, and remove duplicates
     all_loggers = sorted({logging.getLogger(name).name for name in logging.root.manager.loggerDict} | LOGGER_NAMES)
 
