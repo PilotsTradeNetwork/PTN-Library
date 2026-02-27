@@ -68,6 +68,7 @@ select = [
 ignore = [
     # "E402",
     "E501",  # line too long, handled by ruff format
+    "S101",  # use of assert - used intentionally for type narrowing
 ]
 
 [tool.ty.environment]

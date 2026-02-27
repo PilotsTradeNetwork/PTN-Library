@@ -2,7 +2,7 @@ from discord import CategoryChannel, Interaction, Member, Role
 from discord.abc import GuildChannel
 from discord.app_commands import NoPrivateMessage, check
 
-from ptn_utils.classes.ErrorClasses import CommandChannelError, CommandRoleError
+from ptn_utils.classes.error_classes import CommandChannelError, CommandRoleError
 from ptn_utils.get_or_fetch import GetOrFetch
 from ptn_utils.global_constants import (
     CAT_CT,

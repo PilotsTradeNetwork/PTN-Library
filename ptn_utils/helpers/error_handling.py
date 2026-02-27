@@ -6,7 +6,7 @@ from discord.app_commands.errors import CommandInvokeError as app_CommandInvokeE
 from discord.ext.commands import CommandError, Context
 from discord.ext.commands.errors import CommandInvokeError as ext_CommandInvokeError
 
-from ptn_utils.classes.ErrorClasses import (
+from ptn_utils.classes.error_classes import (
     AsyncioTimeoutError,
     BackgroundError,
     CommandChannelError,
@@ -39,7 +39,7 @@ class ErrorHandler:
     def __init__(self, get_or_fetch: GetOrFetch):
         self.get_or_fetch = get_or_fetch
 
-    async def on_generic_error(self, ctx: Interaction | Context[Any], error: CommandError):
+    async def on_generic_error(self, ctx: Interaction | Context[Any], error: CommandError):  # noqa: C901
         """An error handler for our custom errors"""
 
         async def send_reply(ctx: Interaction | Context[Any], embed: Embed, isprivate: bool):
@@ -106,7 +106,7 @@ class ErrorHandler:
         else:
             logger.error(f"❌ Error {err} was not caught by on_generic_error")
 
-    async def on_app_command_error(self, interaction: Interaction, error: AppCommandError) -> None:
+    async def on_app_command_error(self, interaction: Interaction, error: AppCommandError) -> None:  # noqa: C901, PLR0912, PLR0915
         """An error handler for discord.py errors"""
         assert interaction.command is not None
         assert isinstance(interaction.channel, (TextChannel, Thread))
@@ -181,7 +181,7 @@ class ErrorHandler:
                     await interaction.response.send_message(embed=embed, ephemeral=True)
                 except DiscordException:
                     await interaction.followup.send(embed=embed, ephemeral=True)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"An error occurred in the error handler (lol): {e}")
 
     async def on_background_error(self, error: BackgroundError):

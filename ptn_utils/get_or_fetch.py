@@ -7,6 +7,7 @@ from discord.ext import commands
 
 logger = logging.getLogger(__name__)
 
+
 @final
 class GetOrFetch:
     def __init__(self, bot: commands.Bot, guild_id: int):

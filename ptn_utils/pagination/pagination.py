@@ -13,7 +13,7 @@ logger = get_logger("ptn_utils.pagination")
 class PaginationView(LayoutView):
     message: Message | None = None
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         title: str,
         content: list[tuple[str, str]],
