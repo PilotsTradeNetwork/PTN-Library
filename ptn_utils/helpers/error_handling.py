@@ -1,6 +1,6 @@
 import discord
-from discord import Interaction
-from discord.abc import GuildChannel
+from discord import DMChannel, DiscordException, Interaction
+from discord.abc import Messageable
 from discord.app_commands import AppCommandError
 from ptn_utils.get_or_fetch import GetOrFetch
 from ptn_utils.global_constants import (
@@ -10,6 +10,7 @@ from ptn_utils.global_constants import (
 )
 from ptn_utils.logger.logger import get_logger
 from ptn_utils.classes.ErrorClasses import (
+    BackgroundError,
     CommandChannelError,
     CommandRoleError,
     SilentError,
@@ -47,7 +48,7 @@ class ErrorHandler:
 
             spamchannel = await self.get_or_fetch.channel(CHANNEL_BOTSPAM)
 
-            assert isinstance(spamchannel, GuildChannel)
+            assert isinstance(spamchannel, Messageable)
             assert interaction is not None
             assert interaction.command is not None
             assert interaction.channel is not None
@@ -112,7 +113,8 @@ class ErrorHandler:
 
         assert interaction is not None
         assert interaction.command is not None
-        assert isinstance(interaction.channel, GuildChannel)
+        assert isinstance(interaction.channel, Messageable)
+        assert not isinstance(interaction.channel, DMChannel)
 
         logger.error(
             f"❌ Error from {interaction.command.name} in {interaction.channel.name} called by {interaction.user.display_name}: {error}"
@@ -127,7 +129,10 @@ class ErrorHandler:
                     description=f"Sorry, you can only run this command out of: {formatted_channel_list}",
                     color=EMBED_COLOUR_ERROR,
                 )
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+                try:
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                except DiscordException:
+                    await interaction.followup.send(embed=embed, ephemeral=True)
 
             elif isinstance(error, CommandRoleError):
                 logger.debug("Role check error raised")
@@ -144,7 +149,10 @@ class ErrorHandler:
                         color=EMBED_COLOUR_ERROR,
                     )
                 logger.debug("notify user")
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+                try:
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                except DiscordException:
+                    await interaction.followup.send(embed=embed, ephemeral=True)
 
             elif isinstance(error, CustomError):
                 message = error.message
@@ -190,13 +198,13 @@ class ErrorHandler:
             logger.error(f"An error occurred in the error handler (lol): {e}")
 
     async def on_background_error(
-        self, error: CustomError
+        self, error: BackgroundError
     ):  # an error handler for interactionless errors
         logger.error(f"⚠ Handler received background error: {error}")
 
         try:
             spamchannel = await self.get_or_fetch.channel(CHANNEL_BOTSPAM)
-            assert isinstance(spamchannel, GuildChannel)
+            assert isinstance(spamchannel, Messageable)
             spam_embed = discord.Embed(
                 description=f":warning: {error.message}", color=EMBED_COLOUR_WARNING
             )
