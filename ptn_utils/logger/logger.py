@@ -144,11 +144,7 @@ async def set_logging_level_autocomplete(
         logger.debug(f"Dot found in current input '{current}', showing hierarchical loggers")
 
     # Filter by current input before truncating
-    filtered = [
-        logger_name
-        for logger_name in all_loggers
-        if current.lower() in logger_name.lower()
-    ]
+    filtered = [logger_name for logger_name in all_loggers if current.lower() in logger_name.lower()]
 
     if len(filtered) > 25:
         # Generate a warning and move on. Log the full list in debug if we care to check it out later

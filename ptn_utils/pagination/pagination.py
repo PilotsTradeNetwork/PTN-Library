@@ -20,8 +20,10 @@ class PaginationView(LayoutView):
         buttons_callback: Callable[[Interaction, str, int], CoroutineType[Any, Any, None]] | None = None,
         page_length: int = 10,
     ):
-        logger.debug(f"Initializing PaginationView for '{title}' with {len(content)} items, page_length={page_length}, ephemeral={ephemeral}")
-        
+        logger.debug(
+            f"Initializing PaginationView for '{title}' with {len(content)} items, page_length={page_length}, ephemeral={ephemeral}"
+        )
+
         self.title: str = title
         self.content: list[tuple[str, str]] = content
         self.ephemeral: bool = ephemeral
@@ -36,7 +38,7 @@ class PaginationView(LayoutView):
         self.page_length: int = page_length
         self.current_page: int = 1
         self.max_pages: int = len(self.chunked_content)
-        
+
         logger.debug(f"PaginationView initialized: {self.max_pages} pages total")
         super().__init__(timeout=60)
 
@@ -52,7 +54,9 @@ class PaginationView(LayoutView):
             logger.warning(f"Cannot refresh page: message not set for '{self.title}'")
 
     def _create_page_embed(self, disabled: bool = False):
-        logger.trace(f"Creating page embed: page {self.current_page}/{self.max_pages} for '{self.title}', disabled={disabled}")
+        logger.trace(
+            f"Creating page embed: page {self.current_page}/{self.max_pages} for '{self.title}', disabled={disabled}"
+        )
         logger.trace(f"Items on current page: {len(self.chunked_content[self.current_page - 1])}")
 
         self.clear_items()
@@ -124,7 +128,9 @@ class PaginationView(LayoutView):
 
     def _create_button_callback(self, title: str, index: int):
         async def callback(interaction: Interaction):
-            logger.info(f"Item button clicked: '{title}' (index {index}) by {interaction.user.name} ({interaction.user.id})")
+            logger.info(
+                f"Item button clicked: '{title}' (index {index}) by {interaction.user.name} ({interaction.user.id})"
+            )
             if self.buttons_callback:
                 logger.debug(f"Executing callback for '{title}' at index {index}")
                 await self.buttons_callback(interaction, title, index)
@@ -140,7 +146,9 @@ class PaginationView(LayoutView):
             logger.error(f"No custom_id found in pagination interaction data from {interaction.user.name}")
             return
 
-        logger.debug(f"Pagination control '{custom_id}' clicked by {interaction.user.name} ({interaction.user.id}) on page {self.current_page}/{self.max_pages}")
+        logger.debug(
+            f"Pagination control '{custom_id}' clicked by {interaction.user.name} ({interaction.user.id}) on page {self.current_page}/{self.max_pages}"
+        )
 
         if custom_id == "previous" and self.current_page > 1:
             self.current_page -= 1
@@ -150,14 +158,18 @@ class PaginationView(LayoutView):
             self.current_page += 1
             logger.trace(f"Navigated to next page: {self.current_page}")
         else:
-            logger.warning(f"Pagination control '{custom_id}' pressed but no action taken (current_page={self.current_page})")
+            logger.warning(
+                f"Pagination control '{custom_id}' pressed but no action taken (current_page={self.current_page})"
+            )
 
         self._create_page_embed()
         await interaction.response.edit_message(view=self)
         logger.debug(f"Updated pagination view to page {self.current_page}")
 
     async def _end_pagination(self, interaction: Interaction):
-        logger.info(f"Close button clicked by {interaction.user.name} ({interaction.user.id}). Ending pagination for '{self.title}'.")
+        logger.info(
+            f"Close button clicked by {interaction.user.name} ({interaction.user.id}). Ending pagination for '{self.title}'."
+        )
 
         view = LayoutView()
         view.add_item(TextDisplay(f"Closed the active {self.title} list request from: {interaction.user.mention}."))
@@ -189,18 +201,20 @@ class PaginationView(LayoutView):
             logger.warning(f"Only {self.message.interaction.user.name} can interact with this pagination.")
             await interaction.response.send_message("You are not the owner of this pagination", ephemeral=True)
             return False
-        
+
         logger.trace(f"Interaction check passed for {interaction.user.name}")
         return True
 
     async def _broadcast_message(self, interaction: Interaction):
-        logger.info(f"Broadcast button clicked by {interaction.user.name} ({interaction.user.id}). Broadcasting '{self.title}' list.")
+        logger.info(
+            f"Broadcast button clicked by {interaction.user.name} ({interaction.user.id}). Broadcasting '{self.title}' list."
+        )
 
         broadcast_view = self
         broadcast_view.ephemeral = False
         broadcast_view._create_page_embed(disabled=True)
         broadcast_view.stop()
-        
+
         logger.debug(f"Sending broadcast message for '{self.title}'")
         await interaction.response.send_message(view=broadcast_view, ephemeral=False)
 
