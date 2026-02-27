@@ -43,9 +43,8 @@ class ErrorHandler:
         """An error handler for our custom errors"""
 
         async def send_reply(ctx: Interaction | Context[Any], embed: Embed, isprivate: bool):
-            is_interaction = isinstance(ctx, Interaction)
             try:
-                if is_interaction:
+                if isinstance(ctx, Interaction):
                     try:
                         await ctx.response.send_message(embed=embed, ephemeral=isprivate)
                     except DiscordException:
@@ -107,7 +106,7 @@ class ErrorHandler:
         else:
             logger.error(f"❌ Error {err} was not caught by on_generic_error")
 
-    async def on_app_command_error(self, interaction: Interaction, error: AppCommandError):
+    async def on_app_command_error(self, interaction: Interaction, error: AppCommandError) -> None:
         """An error handler for discord.py errors"""
         assert interaction.command is not None
         assert isinstance(interaction.channel, (TextChannel, Thread))

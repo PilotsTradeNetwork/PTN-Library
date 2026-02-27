@@ -3,9 +3,9 @@
 import ast
 import os
 
-_production = ast.literal_eval(os.environ.get("PTN_SERVICE", "False"))
+PRODUCTION = ast.literal_eval(os.environ.get("PTN_SERVICE", "False"))
 
-if _production:
+if PRODUCTION:
     from ptn_utils.global_constants.prod import *
 else:
     from ptn_utils.global_constants.dev import *
