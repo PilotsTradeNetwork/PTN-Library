@@ -10,6 +10,7 @@ For consistency, please prepend all categories with "CAT_", all channels with "C
 CAT_ADMIN_ARCHIVE = 836367821168443453  # PANTS Admin Archive category
 CAT_ARCHIVE = 877244591579992144  # PANTS Archive category
 CAT_CC = 877108931699310592  # PANTS Community Carrier category
+CAT_CT = 1484321398028763197  # PANTS Community Team category
 CAT_FACTION = 1314525988545368104  # PANTS Faction category
 CAT_SC = 1258201328115781683  # PANTS Star Citizen Community category
 CAT_SOMM = 1079405684950564914  # PANTS Sommelier category
