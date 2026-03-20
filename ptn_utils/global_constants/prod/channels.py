@@ -10,6 +10,7 @@ For consistency, please prepend all categories with "CAT_", all channels with "C
 CAT_ADMIN_ARCHIVE = 1299808868326576169  # PTN Admin Archive category
 CAT_ARCHIVE = 1048957416781393970  # PTN Archive category
 CAT_CC = 877107894452117544  # PTN Community Carrier category
+CAT_CT = 863521070891794462  # PTN Community Team category
 CAT_FACTION = 829214377352757259  # PTN Faction category
 CAT_SC = 1252708784866983976  # PTN Star Citizen Community category
 CAT_SOMM = 1077429676470976512  # PTN Sommelier category

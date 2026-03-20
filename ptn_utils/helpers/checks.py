@@ -5,6 +5,7 @@ from ptn_utils.get_or_fetch import GetOrFetch
 from ptn_utils.global_constants import (
     any_moderation_role,
     CAT_CC,
+    CAT_CT,
     CAT_SC,
     CAT_SOMM,
     CAT_FACTION,
@@ -138,7 +139,7 @@ class Checks:
             )
 
             permitted_role_ids = any_moderation_role.copy()
-            if category.id == CAT_CC:
+            if category.id == CAT_CT:
                 permitted_role_ids.append(ROLE_CM)
             elif category.id == CAT_SOMM:
                 permitted_role_ids.append(ROLE_SOMM)
