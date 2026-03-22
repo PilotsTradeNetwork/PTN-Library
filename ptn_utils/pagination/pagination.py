@@ -9,7 +9,7 @@ logger = get_logger("ptn_utils.pagination")
 
 
 class PaginationView(LayoutView):
-    message: Message | None = None
+    message: Message
 
     def __init__(
         self,
@@ -30,12 +30,10 @@ class PaginationView(LayoutView):
             buttons_callback
         )
 
-        self.chunked_content: list[list[tuple[str, str]]] = [
-            content[i : i + page_length] for i in range(0, len(content), page_length)
-        ]
         self.page_length: int = page_length
         self.current_page: int = 1
-        self.max_pages: int = len(self.chunked_content)
+
+        self._chunk_content()
         
         logger.debug(f"PaginationView initialized: {self.max_pages} pages total")
         super().__init__(timeout=60)
@@ -44,12 +42,20 @@ class PaginationView(LayoutView):
 
     async def refresh_page(self):
         logger.debug(f"Refreshing page {self.current_page} for '{self.title}'")
+        self._chunk_content()
         self._create_page_embed()
         if self.message:
             await self.message.edit(view=self)
             logger.trace(f"Page refresh complete for '{self.title}'")
         else:
             logger.warning(f"Cannot refresh page: message not set for '{self.title}'")
+
+    def _chunk_content(self):
+        self.chunked_content = [
+            self.content[i : i + self.page_length] for i in range(0, len(self.content), self.page_length)
+        ]
+        self.max_pages = len(self.chunked_content)
+        logger.debug(f"Content re-chunked for '{self.title}': {self.max_pages} pages total")
 
     def _create_page_embed(self, disabled: bool = False):
         logger.trace(f"Creating page embed: page {self.current_page}/{self.max_pages} for '{self.title}', disabled={disabled}")
@@ -80,7 +86,7 @@ class PaginationView(LayoutView):
                     title, index + (self.current_page - 1) * self.page_length
                 )
 
-                section = Section(accessory=button if button else None)
+                section = Section(accessory=button)
 
                 section.add_item(f"**{title}**\n{info}")
 
@@ -134,7 +140,11 @@ class PaginationView(LayoutView):
         return callback
 
     async def _handle_pagination_control(self, interaction: Interaction):
-        custom_id = interaction.data.get("custom_id")
+        if interaction.data:
+            custom_id = interaction.data.get("custom_id")
+        else:
+            custom_id = None
+            logger.error(f"No interaction data found for pagination control click by {interaction.user.name}")
 
         if not custom_id:
             logger.error(f"No custom_id found in pagination interaction data from {interaction.user.name}")
@@ -170,10 +180,16 @@ class PaginationView(LayoutView):
     async def on_timeout(self) -> None:
         logger.info(f"Pagination for '{self.title}' timed out due to 60 seconds of inactivity.")
 
+        if self.message.interaction_metadata:
+            user_mention = self.message.interaction_metadata.user.mention
+        else:
+            user_mention = "unknown user"
+            logger.error("Message interaction metadata is missing during pagination timeout handling.")
+
         view = LayoutView()
         view.add_item(
             TextDisplay(
-                f"Closed the active {self.title} list request from: {self.message.interaction_metadata.user.mention} due to no input in 60 seconds."
+                f"Closed the active {self.title} list request from: {user_mention} due to no input in 60 seconds."
             )
         )
 
@@ -183,10 +199,14 @@ class PaginationView(LayoutView):
 
     @override
     async def interaction_check(self, interaction: Interaction, /) -> bool:
+        if not self.message.interaction_metadata:
+            logger.error("PaginationView interaction check failed: message has no interaction metadata")
+            await interaction.response.send_message("Pagination owner check failed", ephemeral=True)
+            return False
         if interaction.user != self.message.interaction_metadata.user:
             self.message.interaction_metadata.user
 
-            logger.warning(f"Only {self.message.interaction.user.name} can interact with this pagination.")
+            logger.warning(f"Only {self.message.interaction_metadata.user.name} can interact with this pagination.")
             await interaction.response.send_message("You are not the owner of this pagination", ephemeral=True)
             return False
         
