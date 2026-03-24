@@ -40,8 +40,11 @@ class PaginationView(LayoutView):
 
         self._create_page_embed()
 
-    async def refresh_page(self):
+    async def refresh_page(self, new_content: list[tuple[str, str]] | None = None):
         logger.debug(f"Refreshing page {self.current_page} for '{self.title}'")
+        if new_content is not None:
+            logger.debug(f"Updating content for '{self.title}' with {len(new_content)} new items")
+            self.content = new_content
         self._chunk_content()
         self._create_page_embed()
         if self.message:
