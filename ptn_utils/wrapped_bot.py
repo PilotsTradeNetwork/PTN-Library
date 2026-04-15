@@ -4,7 +4,7 @@ from discord import AllowedMentions, Intents
 from discord.ext.commands import Bot
 
 from .get_or_fetch import GetOrFetch
-from .global_constants import DISCORD_GUILD, PRODUCTION
+from .global_constants import DISCORD_GUILD, _production
 from .helpers.checks import Checks
 from .helpers.error_handling import ErrorHandler
 
@@ -17,7 +17,7 @@ class WrappedBot(Bot):
 
     def __init__(self, command_prefix: Any, *, intents: Intents, **options: Any):
         allowed_mentions = options.pop("allowed_mentions", None)
-        if not PRODUCTION:
+        if not _production:
             allowed_mentions = allowed_mentions or AllowedMentions.none()
         options["allowed_mentions"] = allowed_mentions
 
