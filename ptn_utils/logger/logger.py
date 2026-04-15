@@ -1,19 +1,21 @@
 from __future__ import annotations
+
 import logging
 import os
 from enum import Enum
 from sys import stdout
-from typing import List
 
+import loguru
 from discord import Interaction, app_commands
 from discord.app_commands import autocomplete
 from discord.ext import commands
-import loguru
 
 from ptn_utils.global_constants import any_council_role
-from ptn_utils.logger.InterceptHandler import InterceptHandler
+from ptn_utils.logger.intercept_handler import InterceptHandler
 
 LOG_SINKS: dict[str, int] = {}
+
+DISCORD_MAX_AUTOCOMPLETE_OPTIONS = 25
 
 # Global registry of all logger names across all PTN bots
 LOGGER_NAMES: set[str] = set()
@@ -57,9 +59,11 @@ def create_default_logger_sink(level: str) -> None:
             if logger_name == "_default":
                 continue
             logger_name_list = logger_name.split(".")
-            if len(record_logger_name) >= len(logger_name_list):
-                if record_logger_name[: len(logger_name_list)] == logger_name_list:
-                    return False
+            if (
+                len(record_logger_name) >= len(logger_name_list)
+                and record_logger_name[: len(logger_name_list)] == logger_name_list
+            ):
+                return False
         return True
 
     sink_id = loguru.logger.add(
@@ -121,9 +125,9 @@ class LogLevels(Enum):
 
 
 async def set_logging_level_autocomplete(
-    interaction: Interaction,
+    _interaction: Interaction,
     current: str,
-) -> List[app_commands.Choice[str]]:
+) -> list[app_commands.Choice[str]]:
     # Get stdlib loggers, loguru loggers from our registry, sort, and remove duplicates
     all_loggers = sorted({logging.getLogger(name).name for name in logging.root.manager.loggerDict} | LOGGER_NAMES)
 
@@ -144,19 +148,18 @@ async def set_logging_level_autocomplete(
         logger.debug(f"Dot found in current input '{current}', showing hierarchical loggers")
 
     # Filter by current input before truncating
-    filtered = [
-        logger_name
-        for logger_name in all_loggers
-        if current.lower() in logger_name.lower()
-    ]
+    filtered = [logger_name for logger_name in all_loggers if current.lower() in logger_name.lower()]
 
-    if len(filtered) > 25:
+    if len(filtered) > DISCORD_MAX_AUTOCOMPLETE_OPTIONS:
         # Generate a warning and move on. Log the full list in debug if we care to check it out later
         logger.warning("Autocomplete returned more options than Discord can handle. Truncating to 25")
         logger.debug(filtered)
 
     # Convert to Choice objects
-    filtered = [app_commands.Choice(name=logger_name, value=logger_name) for logger_name in filtered[:25]]
+    filtered = [
+        app_commands.Choice(name=logger_name, value=logger_name)
+        for logger_name in filtered[:DISCORD_MAX_AUTOCOMPLETE_OPTIONS]
+    ]
 
     logger.debug(f"Final autocomplete results for '{current}': {len(filtered)} options")
     if filtered:
@@ -188,10 +191,10 @@ class Logger(commands.Cog):
             await interaction.response.send_message(f"Logging level for {logger_name} set to {log_level.name}")
 
         else:
-            for logger_name, sink_id in list(LOG_SINKS.items()):
-                if logger_name != "_default":
+            for name, sink_id in list(LOG_SINKS.items()):
+                if name != "_default":
                     logger.remove(sink_id)
-                    del LOG_SINKS[logger_name]
+                    del LOG_SINKS[name]
             create_default_logger_sink(log_level.value)
             logger.info(f"Logging level set to {log_level.name}")
             await interaction.response.send_message(f"Logging level set to {log_level.name}")

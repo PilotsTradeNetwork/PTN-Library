@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class CruiseSystemState(str, Enum):
+class CruiseSystemState(StrEnum):
     """Global state of the cruise system."""
 
     PREP = "prep"
