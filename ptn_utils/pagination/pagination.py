@@ -224,8 +224,6 @@ class PaginationView(LayoutView):
             )
 
         self._create_page_embed()
-        await interaction.response.send_message()
-        await interaction.original_response()
         await interaction.response.edit_message(view=self)
         logger.debug(f"Updated pagination view to page {self.current_page}")
 
