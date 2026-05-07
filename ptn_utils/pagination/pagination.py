@@ -1,7 +1,7 @@
 from types import CoroutineType
 from typing import Any, Callable, override
 
-from discord import ButtonStyle, Interaction, Member, Message
+from discord import AllowedMentions, ButtonStyle, Interaction, Member, Message
 from discord.ui import ActionRow, Button, Container, LayoutView, Section, TextDisplay
 
 from ptn_utils.logger.logger import get_logger
@@ -296,7 +296,11 @@ class PaginationView(LayoutView):
         broadcast_view.stop()
 
         logger.debug(f"Sending broadcast message for '{self.title}'")
-        await interaction.response.send_message(view=broadcast_view, ephemeral=False)
+        await interaction.response.send_message(
+            view=broadcast_view,
+            ephemeral=False,
+            allowed_mentions=AllowedMentions.none(),
+        )
 
         message = await interaction.original_response()
         logger.trace("Broadcast message sent, updating original ephemeral message")
