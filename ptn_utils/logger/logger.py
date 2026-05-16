@@ -52,7 +52,7 @@ def create_default_logger_sink(level: str) -> None:
         logger.remove(LOG_SINKS["_default"])
 
     def filter_function(record: loguru.Record) -> bool:
-        record_logger_name = record["extra"].get("logger_name", []).split(".")
+        record_logger_name = record["extra"].get("logger_name", "").split(".")
         for logger_name in LOG_SINKS:
             if logger_name == "_default":
                 continue
@@ -75,7 +75,7 @@ def create_logger_sink(logger_name: str, level: str) -> None:
         logger.remove(LOG_SINKS[logger_name])
 
     def filter_function(record: loguru.Record) -> bool:
-        record_logger_name = record["extra"].get("logger_name", []).split(".")
+        record_logger_name = record["extra"].get("logger_name", "").split(".")
         logger_name_list = logger_name.split(".")
         if len(record_logger_name) >= len(logger_name_list):
             return record_logger_name[: len(logger_name_list)] == logger_name_list

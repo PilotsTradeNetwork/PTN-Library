@@ -116,7 +116,15 @@ class BotSettings:
                     return bool(value)
             return value
 
-        # Plain types — TOML already provides native bool/int/float/str
+        # Plain types — coerce strings (e.g. from legacy .txt migration)
+        if isinstance(value, str):
+            if origin is None:
+                if annotation is bool:
+                    return value.lower() not in ("false", "0", "no", "")
+                if annotation is int:
+                    return int(value)
+                if annotation is float:
+                    return float(value)
         return value
 
     def _migrate_legacy_file(self) -> bool:
