@@ -175,11 +175,27 @@ class PaginationView(LayoutView):
 
         container.add_item(pagination_buttons_row)
 
-        options = [
-            SelectOption(label=f"Page {i}/{len(self.chunked_content)}", value=f"{i}") 
-            for i in range(1, min(len(self.chunked_content), 25) + 1)
-        ]
-
+        length = len(self.chunked_content)
+        options = []
+        i = 1
+        desired_range = min(length, 25)
+        half_range = max(desired_range - 2, 0) // 2
+        delta_minus = max(half_range - (length - 1 - self.current_page), 0)
+        delta_plus = max(half_range - (self.current_page - 2), 0)
+        while i <= length and len(options) < 25:
+            option = SelectOption(label=f"Page {i}/{length}", value=f"{i}")
+            if (
+                i == 1 
+                or i == length
+                or (
+                    i >= self.current_page - half_range - delta_minus 
+                    and i <= self.current_page + half_range + delta_plus
+                )
+            ):
+                options.append(option)
+            
+            i += 1
+        
         select = Select(
             custom_id="select",
             placeholder="Select the page you want to jump to.",
