@@ -3,7 +3,7 @@ import logging
 import os
 from enum import Enum
 from sys import stdout
-from typing import List
+from typing import Any, List
 
 from discord import Interaction, app_commands
 from discord.app_commands import autocomplete
@@ -19,7 +19,7 @@ LOG_SINKS: dict[str, int] = {}
 LOGGER_NAMES: set[str] = set()
 
 
-def get_logger(logger_name: str, **extra_context):
+def get_logger(logger_name: str, **extra_context: dict[str, Any]) -> loguru.Logger:
     """
     Get a bound logger and register the name for autocomplete.
 
@@ -121,7 +121,7 @@ class LogLevels(Enum):
 
 
 async def set_logging_level_autocomplete(
-    interaction: Interaction,
+    _interaction: Interaction,
     current: str,
 ) -> List[app_commands.Choice[str]]:
     # Get stdlib loggers, loguru loggers from our registry, sort, and remove duplicates
