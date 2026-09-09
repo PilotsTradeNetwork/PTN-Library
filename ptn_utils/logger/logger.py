@@ -62,11 +62,7 @@ def create_default_logger_sink(level: str) -> None:
                     return False
         return True
 
-    sink_id = loguru.logger.add(
-        stdout,
-        level=level,
-        filter=filter_function,
-    )
+    sink_id = loguru.logger.add(stdout, level=level, filter=filter_function)
     LOG_SINKS["_default"] = sink_id
 
 
@@ -81,11 +77,7 @@ def create_logger_sink(logger_name: str, level: str) -> None:
             return record_logger_name[: len(logger_name_list)] == logger_name_list
         return False
 
-    sink_id = loguru.logger.add(
-        stdout,
-        level=level,
-        filter=filter_function,
-    )
+    sink_id = loguru.logger.add(stdout, level=level, filter=filter_function)
     LOG_SINKS[logger_name] = sink_id
 
 
@@ -120,10 +112,7 @@ class LogLevels(Enum):
     Trace = "TRACE"
 
 
-async def set_logging_level_autocomplete(
-    interaction: Interaction,
-    current: str,
-) -> List[app_commands.Choice[str]]:
+async def set_logging_level_autocomplete(interaction: Interaction, current: str) -> List[app_commands.Choice[str]]:
     # Get stdlib loggers, loguru loggers from our registry, sort, and remove duplicates
     all_loggers = sorted({logging.getLogger(name).name for name in logging.root.manager.loggerDict} | LOGGER_NAMES)
 
@@ -144,11 +133,7 @@ async def set_logging_level_autocomplete(
         logger.debug(f"Dot found in current input '{current}', showing hierarchical loggers")
 
     # Filter by current input before truncating
-    filtered = [
-        logger_name
-        for logger_name in all_loggers
-        if current.lower() in logger_name.lower()
-    ]
+    filtered = [logger_name for logger_name in all_loggers if current.lower() in logger_name.lower()]
 
     if len(filtered) > 25:
         # Generate a warning and move on. Log the full list in debug if we care to check it out later
