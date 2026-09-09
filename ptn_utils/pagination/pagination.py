@@ -36,10 +36,7 @@ class PaginationView(LayoutView):
         owner: Member | None = None,
         ephemeral: bool = False,
         buttons_text: str | None = None,
-        buttons_callback: Callable[
-            [LayoutView, Interaction, str, int], CoroutineType[Any, Any, None]
-        ]
-        | None = None,
+        buttons_callback: Callable[[LayoutView, Interaction, str, int], CoroutineType[Any, Any, None]] | None = None,
         page_length: int = 10,
     ):
         logger.debug(
@@ -51,10 +48,9 @@ class PaginationView(LayoutView):
         self.owner: Member | None = owner
         self.ephemeral: bool = ephemeral
         self.buttons_text: str | None = buttons_text
-        self.buttons_callback: (
-            Callable[[LayoutView, Interaction, str, int], CoroutineType[Any, Any, None]]
-            | None
-        ) = buttons_callback
+        self.buttons_callback: Callable[[LayoutView, Interaction, str, int], CoroutineType[Any, Any, None]] | None = (
+            buttons_callback
+        )
 
         self.page_length: int = page_length
         self.current_page: int = 1
@@ -70,9 +66,7 @@ class PaginationView(LayoutView):
         assert self.message is not None
         logger.debug(f"Refreshing page {self.current_page} for '{self.title}'")
         if new_content is not None:
-            logger.debug(
-                f"Updating content for '{self.title}' with {len(new_content)} new items"
-            )
+            logger.debug(f"Updating content for '{self.title}' with {len(new_content)} new items")
             self.content = new_content
         self._chunk_content()
         self._create_page_embed()
@@ -81,8 +75,7 @@ class PaginationView(LayoutView):
 
     def _chunk_content(self):
         self.chunked_content = [
-            self.content[i : i + self.page_length]
-            for i in range(0, len(self.content), self.page_length)
+            self.content[i : i + self.page_length] for i in range(0, len(self.content), self.page_length)
         ]
         if not self.chunked_content:
             self.chunked_content = [[]]  # one empty page
@@ -90,17 +83,13 @@ class PaginationView(LayoutView):
         self.max_pages = len(self.chunked_content)
         if self.current_page > self.max_pages:
             self.current_page = self.max_pages or 1
-        logger.debug(
-            f"Content re-chunked for '{self.title}': {self.max_pages} pages total"
-        )
+        logger.debug(f"Content re-chunked for '{self.title}': {self.max_pages} pages total")
 
     def _create_page_embed(self, disabled: bool = False):
         logger.trace(
             f"Creating page embed: page {self.current_page}/{self.max_pages} for '{self.title}', disabled={disabled}"
         )
-        logger.trace(
-            f"Items on current page: {len(self.chunked_content[self.current_page - 1])}"
-        )
+        logger.trace(f"Items on current page: {len(self.chunked_content[self.current_page - 1])}")
 
         self.clear_items()
 
@@ -151,22 +140,14 @@ class PaginationView(LayoutView):
             disabled=self.current_page == len(self.chunked_content) or disabled,
         )
         next_button.callback = self._handle_pagination_control
-        close_button = Button(
-            label="Close",
-            style=ButtonStyle.danger,
-            custom_id="close",
-            disabled=disabled,
-        )
+        close_button = Button(label="Close", style=ButtonStyle.danger, custom_id="close", disabled=disabled)
         close_button.callback = self._end_pagination
 
         buttons = (previous_button, next_button, close_button)
 
         if self.ephemeral:
             broadcast_button = Button(
-                label="Broadcast",
-                style=ButtonStyle.success,
-                custom_id="broadcast",
-                disabled=disabled,
+                label="Broadcast", style=ButtonStyle.success, custom_id="broadcast", disabled=disabled
             )
             broadcast_button.callback = self._broadcast_message
             buttons += (broadcast_button,)
@@ -186,9 +167,7 @@ class PaginationView(LayoutView):
                 logger.debug(f"Executing callback for '{title}' at index {index}")
                 await self.buttons_callback(self, interaction, title, index)
             else:
-                logger.error(
-                    "No callback defined for item button, but button was created. This should not happen."
-                )
+                logger.error("No callback defined for item button, but button was created. This should not happen.")
 
         return callback
 
@@ -197,14 +176,10 @@ class PaginationView(LayoutView):
             custom_id = interaction.data.get("custom_id")
         else:
             custom_id = None
-            logger.error(
-                f"No interaction data found for pagination control click by {interaction.user.name}"
-            )
+            logger.error(f"No interaction data found for pagination control click by {interaction.user.name}")
 
         if not custom_id:
-            logger.error(
-                f"No custom_id found in pagination interaction data from {interaction.user.name}"
-            )
+            logger.error(f"No custom_id found in pagination interaction data from {interaction.user.name}")
             return
 
         logger.debug(
@@ -233,11 +208,7 @@ class PaginationView(LayoutView):
         )
 
         view = LayoutView()
-        view.add_item(
-            TextDisplay(
-                f"Closed the active {self.title} list request from: {interaction.user.mention}."
-            )
-        )
+        view.add_item(TextDisplay(f"Closed the active {self.title} list request from: {interaction.user.mention}."))
 
         await interaction.response.edit_message(view=view)
         self.stop()
@@ -246,9 +217,7 @@ class PaginationView(LayoutView):
     @override
     async def on_timeout(self) -> None:
         assert self.message is not None
-        logger.info(
-            f"Pagination for '{self.title}' timed out due to 60 seconds of inactivity."
-        )
+        logger.info(f"Pagination for '{self.title}' timed out due to 60 seconds of inactivity.")
 
         if self.owner:
             owner_mention = f"from: {self.owner.mention} "
@@ -257,9 +226,7 @@ class PaginationView(LayoutView):
 
         view = LayoutView()
         view.add_item(
-            TextDisplay(
-                f"Closed the active {self.title} list request {owner_mention}due to no input in 60 seconds."
-            )
+            TextDisplay(f"Closed the active {self.title} list request {owner_mention}due to no input in 60 seconds.")
         )
 
         await self.message.edit(view=view)
@@ -276,9 +243,7 @@ class PaginationView(LayoutView):
             logger.warning(
                 f"Interaction check failed: {interaction.user.name} is not the owner of this pagination (owner: {self.owner.name})"
             )
-            await interaction.response.send_message(
-                "You are not the owner of this pagination", ephemeral=True
-            )
+            await interaction.response.send_message("You are not the owner of this pagination", ephemeral=True)
             return False
 
         logger.trace(f"Interaction check passed for {interaction.user.name}")
@@ -297,20 +262,14 @@ class PaginationView(LayoutView):
 
         logger.debug(f"Sending broadcast message for '{self.title}'")
         await interaction.response.send_message(
-            view=broadcast_view,
-            ephemeral=False,
-            allowed_mentions=AllowedMentions.none(),
+            view=broadcast_view, ephemeral=False, allowed_mentions=AllowedMentions.none()
         )
 
         message = await interaction.original_response()
         logger.trace("Broadcast message sent, updating original ephemeral message")
 
         view = LayoutView()
-        view.add_item(
-            TextDisplay(
-                f"Broadcasted the {self.title} list request from: {interaction.user.mention}."
-            )
-        )
+        view.add_item(TextDisplay(f"Broadcasted the {self.title} list request from: {interaction.user.mention}."))
         await self.message.edit(view=view)
 
         broadcast_view.message = message

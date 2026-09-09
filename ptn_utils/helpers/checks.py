@@ -4,7 +4,6 @@ from discord.app_commands import check, NoPrivateMessage
 from ptn_utils.get_or_fetch import GetOrFetch
 from ptn_utils.global_constants import (
     any_moderation_role,
-    CAT_CC,
     CAT_CT,
     CAT_SC,
     CAT_SOMM,
@@ -34,9 +33,7 @@ class Checks:
             raise ValueError("No Channels specified!")
 
         permitted_channel_id = (
-            permitted_channel_id
-            if isinstance(permitted_channel_id, list)
-            else [permitted_channel_id]
+            permitted_channel_id if isinstance(permitted_channel_id, list) else [permitted_channel_id]
         )
 
         async def check_channel(interaction: Interaction) -> bool:
@@ -77,9 +74,7 @@ class Checks:
         )
 
         permission = set(permitted_role_id) & set(user_role_ids)
-        logger.debug(
-            f"User {'has' if permission else 'does not have'} permission.",
-        )
+        logger.debug(f"User {'has' if permission else 'does not have'} permission.")
         if not permission:
             permitted_roles: list[Role] = []
             for role_id in permitted_role_id:
@@ -102,11 +97,7 @@ class Checks:
         if not permitted_role_id:
             raise ValueError("No Roles specified!")
 
-        permitted_role_id = (
-            permitted_role_id
-            if isinstance(permitted_role_id, list)
-            else [permitted_role_id]
-        )
+        permitted_role_id = permitted_role_id if isinstance(permitted_role_id, list) else [permitted_role_id]
 
         async def check_role_aux(interaction: Interaction) -> bool:
             """
@@ -134,9 +125,7 @@ class Checks:
             category = interaction.channel.category
 
             assert interaction.command is not None
-            logger.info(
-                f"{interaction.user.name} used /{interaction.command.name} in {interaction.channel.mention}"
-            )
+            logger.info(f"{interaction.user.name} used /{interaction.command.name} in {interaction.channel.mention}")
 
             permitted_role_ids = any_moderation_role.copy()
             if category.id == CAT_CT:
@@ -152,7 +141,9 @@ class Checks:
             try:
                 await self._check_roles(interaction, permitted_role_ids)
             except CommandRoleError:
-                logger.error(f"❌ {interaction.user.name} does not have permission to run this command in this category")
+                logger.error(
+                    f"❌ {interaction.user.name} does not have permission to run this command in this category"
+                )
                 raise
 
             logger.debug(

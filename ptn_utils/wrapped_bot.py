@@ -6,6 +6,7 @@ from .helpers.checks import Checks
 from .global_constants import DISCORD_GUILD, _production
 from .helpers.error_handling import ErrorHandler
 
+
 # Added for type hints
 class WrappedBot(Bot):
     get_or_fetch: GetOrFetch
