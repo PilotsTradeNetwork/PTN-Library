@@ -1,8 +1,8 @@
 from types import CoroutineType
 from typing import Any, Callable, override
 
-from discord import AllowedMentions, ButtonStyle, Interaction, Member, Message
-from discord.ui import ActionRow, Button, Container, LayoutView, Section, TextDisplay
+from discord import AllowedMentions, ButtonStyle, Interaction, Member, Message, SelectOption
+from discord.ui import ActionRow, Button, Container, LayoutView, Section, Select, TextDisplay
 
 from ptn_utils.logger.logger import get_logger
 
@@ -175,6 +175,41 @@ class PaginationView(LayoutView):
 
         container.add_item(pagination_buttons_row)
 
+        length = len(self.chunked_content)
+        options = []
+        i = 1
+        desired_range = min(length, 25)
+        half_range = max(desired_range - 2, 0) // 2
+        delta_minus = max(half_range - (length - 1 - self.current_page), 0)
+        delta_plus = max(half_range - (self.current_page - 2), 0)
+        while i <= length and len(options) < 25:
+            option = SelectOption(label=f"Page {i}/{length}", value=f"{i}")
+            if (
+                i == 1 
+                or i == length
+                or (
+                    i >= self.current_page - half_range - delta_minus 
+                    and i <= self.current_page + half_range + delta_plus
+                )
+            ):
+                options.append(option)
+            
+            i += 1
+        
+        select = Select(
+            custom_id="select",
+            placeholder="Select the page you want to jump to.",
+            options=options,
+            min_values=1,
+            max_values=1,
+            disabled=disabled or len(self.chunked_content) < 3
+        )
+        select.callback = self._handle_pagination_control
+
+        pagination_select_row = ActionRow(select)
+
+        container.add_item(pagination_select_row)
+
         self.add_item(container)
 
     def _create_button_callback(self, title: str, index: int):
@@ -218,6 +253,11 @@ class PaginationView(LayoutView):
         elif custom_id == "next" and self.current_page < len(self.chunked_content):
             self.current_page += 1
             logger.trace(f"Navigated to next page: {self.current_page}")
+        elif custom_id == "select" and interaction.data:
+            values = interaction.data.get("values")
+            new_page = int(values[0]) if values and len(values) > 0 else self.current_page
+            self.current_page = new_page
+            logger.trace(f"Navigated to selected page: {self.current_page}")
         else:
             logger.warning(
                 f"Pagination control '{custom_id}' pressed but no action taken (current_page={self.current_page})"
